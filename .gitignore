@@ -1,0 +1,3 @@
+.vagrant/
+*.log
+p1/confs/agent.yaml
