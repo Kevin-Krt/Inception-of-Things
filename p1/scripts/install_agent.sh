@@ -18,6 +18,12 @@ log() {
 
 trap 'log ERROR "line $LINENO failed: $BASH_COMMAND"' ERR
 
+log INFO  "Network: preventing enp0s8 from holding the default route"
+sudo restorecon -v /etc/NetworkManager/system-connections/enp0s8.nmconnection
+sudo nmcli connection modify enp0s8 ipv4.never-default yes
+sudo nmcli connection up enp0s8
+log INFO  "Network ready: default route via $(ip route show default | awk '{print $3}')"
+
 log INFO  "Checking that the server $SERVER_IP is reachable..."
 
 if ping -c3 192.168.56.110; then
@@ -26,12 +32,6 @@ else
     log ERROR "Server $SERVER_IP unreachable: check the private network (192.168.56.0/24)"
     exit 1
 fi
-
-log INFO  "Network: preventing enp0s8 from holding the default route"
-sudo restorecon -v /etc/NetworkManager/system-connections/enp0s8.nmconnection
-sudo nmcli connection modify enp0s8 ipv4.never-default yes
-sudo nmcli connection up enp0s8
-log INFO  "Network ready: default route via $(ip route show default | awk '{print $3}')"
 
 log INFO  "Checking the K3s API at https://$SERVER_IP:6443..."
 if curl -k -m 5 https://192.168.56.110:6443; then
